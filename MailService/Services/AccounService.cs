@@ -6,6 +6,9 @@ using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Net;
+using System.Net.Mail;
 using System.Security.Claims;
 
 namespace MailService.Services
@@ -24,24 +27,14 @@ namespace MailService.Services
 
         public SignInResponse SignIn(Account account)
         {
-            if (account != null)
-                return GenerateJwtToken(account);
-            return null;
-        }
+            return GenerateJwtToken(account);
+        }      
 
-        public Account GetInfo(int id)
+        public void SignOut(string id)
         {
-            throw new System.NotImplementedException();
-        }
-
-        public SignInResponse UpdateToken(string refreshToken)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void SignOut(int id)
-        {
-            throw new System.NotImplementedException();
+            var tokens = context.AccountTokens.Where(a => a.AccountId == id).ToList();
+            if (tokens.Count() != 0)
+                context.AccountTokens.RemoveRange(tokens);
         }
 
         public SignInResponse GenerateJwtToken(Account account)
@@ -51,7 +44,7 @@ namespace MailService.Services
                 new Claim(ClaimsIdentity.DefaultNameClaimType, account.Email),
                 new Claim(ClaimTypes.NameIdentifier, account.Id),
             };
-            ClaimsIdentity claimsIdentity = new ClaimsIdentity(claims, "Token", ClaimsIdentity.DefaultNameClaimType, ClaimsIdentity.DefaultRoleClaimType);
+            ClaimsIdentity claimsIdentity = new ClaimsIdentity(claims, "Token", ClaimsIdentity.DefaultNameClaimType, ClaimTypes.NameIdentifier);
 
             JwtSecurityToken token = new JwtSecurityToken(
                    issuer: _authOptions.Issuer,
@@ -67,7 +60,47 @@ namespace MailService.Services
                 AccessToken = tokenStr,
                 RefreshToken = Guid.NewGuid().ToString()
             };
+
+            var tokens = context.AccountTokens.Where(a => a.AccountId == account.Id).ToList();
+            if (tokens.Count()!=0)
+                context.AccountTokens.RemoveRange(tokens);
+
+            context.AccountTokens.Add(new AccountToken() {
+                AccountId = account.Id,
+                RefreshExpires = DateTime.Now.AddMinutes(_authOptions.RefreshLifetime),
+                RefreshToken = resp.RefreshToken });
+            context.SaveChanges();
+
             return resp;
+        }
+
+        public bool SendMessage(string address, string subject, string body)
+        {
+            try
+            {
+                MailMessage mailMessage = new MailMessage();
+                mailMessage.From = new MailAddress("user@gmail.com");
+                mailMessage.To.Add(new MailAddress(address));
+                mailMessage.Subject = subject;
+                mailMessage.Body = body;
+                SmtpClient MailClient = new SmtpClient("smtp.gmail.com", 587);
+                MailClient.Credentials = new NetworkCredential("user@gmail.com", "*****");
+                MailClient.EnableSsl = true;
+                MailClient.Send(mailMessage);
+                return true;
+            }
+            catch (Exception ex) {
+                if (ex.GetType() == typeof(SmtpFailedRecipientException))
+                {
+                    //
+                }
+
+                if (ex.GetType() == typeof(SmtpException))
+                {
+                    //
+                }
+                return false;
+            }
         }
     }
 }

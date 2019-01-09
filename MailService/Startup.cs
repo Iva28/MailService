@@ -46,6 +46,16 @@ namespace MailService
 
             services.AddIdentity<Account, IdentityRole>().AddEntityFrameworkStores<MyDbContext>().AddDefaultTokenProviders();
 
+            services.Configure<IdentityOptions>(options =>
+            {
+                options.Password.RequireDigit = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+
+                options.Password.RequiredLength = 3;
+            });
+
             services.AddTransient<IAccountService, AccountService>();
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
@@ -80,26 +90,7 @@ namespace MailService
                 {
                     {"Bearer", new string[] { } }
                 });
-            });
 
-            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear(); //remove default claims
-            services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-
-            }).AddJwtBearer(cfg =>
-            {
-                cfg.RequireHttpsMetadata = false;
-                cfg.SaveToken = true;
-                cfg.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidIssuer = _authOptions.Issuer,    
-                    ValidAudience = _authOptions.Audience,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration[_authOptions.Key])),
-                    ClockSkew = TimeSpan.Zero
-                };
             });
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
@@ -125,6 +116,7 @@ namespace MailService
             app.UseAuthentication();
 
             app.UseSwagger();
+
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1.0/swagger.json", "Mail API v1");

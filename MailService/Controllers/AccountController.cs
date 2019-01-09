@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace MailService.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     public class AccountController : ControllerBase
     {
         private IAccountService _accountService;
@@ -54,12 +54,52 @@ namespace MailService.Controllers
                 if (resp != null)
                     return new JsonResult(resp);
             }
-            return NotFound();
+            return ValidationProblem();          
+        }
 
+        [HttpGet]
+        public async Task<IActionResult> GetInfo()
+        {
+            Account acc = await _userManager.FindByIdAsync(_userManager.GetUserId(HttpContext.User));
+            if (acc != null) {
+                var resp = new GetInfoResponse() {
+                    Sent_total = acc.Sent_total,
+                    Delivered_total = acc.Delivered_total,
+                    Sent_today = acc.Sent_today,
+                    Left_today = acc.Left_today,
+                    Delivered_today = acc.Delivered_today
+                };
+                return new JsonResult(resp);
+            }
+            return Unauthorized();
+        }
 
-            //_userManager.RemoveAuthenticationTokenAsync(account, "MyApp", "RefreshToken");
-            //_userManager.GenerateUserTokenAsync(account, "MyApp", "RefreshToken");
-            //_userManager.SetAuthenticationTokenAsync(account, "MyApp", "RefreshToken", newRefreshToken);
+        [HttpPost]
+        public async Task<IActionResult> SendMsg([FromBody]SendMessageRequest model)
+        {
+            Account acc = await _userManager.FindByIdAsync(_userManager.GetUserId(HttpContext.User)); 
+            if (acc == null)
+                return Unauthorized();
+            var success = _accountService.SendMessage(model.Address, model.Subject, model.Body);
+            if (success)
+                return Ok();
+            return BadRequest();
+
+            //https://myaccount.google.com/lesssecureapps -- allow less secure apps: OFF => ON
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SignOut()
+        {
+            await _signInManager.SignOutAsync();
+
+            var accId = _userManager.GetUserId(HttpContext.User);
+            Account acc = await _userManager.FindByIdAsync(accId);
+            if (acc!= null) {
+                _accountService.SignOut(accId);
+                return Ok();
+            }
+            return BadRequest();
         }
     }
 }

@@ -8,6 +8,6 @@ namespace MailService.EF
     {
         public MyDbContext(DbContextOptions opts) : base(opts) { }
 
-       // public DbSet<AccountToken> AccountTokens { get; set; }
+        public DbSet<AccountToken> AccountTokens { get; set; }
     }
 }
