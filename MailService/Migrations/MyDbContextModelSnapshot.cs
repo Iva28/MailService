@@ -90,11 +90,38 @@ namespace MailService.Migrations
 
                     b.Property<DateTime>("RefreshExpires");
 
-                    b.Property<string>("RefreshToken");
+                    b.Property<string>("RefreshToken")
+                        .IsRequired();
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AccountId");
+
                     b.ToTable("AccountTokens");
+                });
+
+            modelBuilder.Entity("MailService.Models.Message", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("AccountId");
+
+                    b.Property<string>("Address")
+                        .IsRequired();
+
+                    b.Property<string>("Body")
+                        .IsRequired();
+
+                    b.Property<string>("Subject")
+                        .IsRequired();
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.ToTable("Messages");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -205,6 +232,20 @@ namespace MailService.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens");
+                });
+
+            modelBuilder.Entity("MailService.Models.AccountToken", b =>
+                {
+                    b.HasOne("MailService.Models.Account", "Account")
+                        .WithMany()
+                        .HasForeignKey("AccountId");
+                });
+
+            modelBuilder.Entity("MailService.Models.Message", b =>
+                {
+                    b.HasOne("MailService.Models.Account", "Account")
+                        .WithMany("Messages")
+                        .HasForeignKey("AccountId");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

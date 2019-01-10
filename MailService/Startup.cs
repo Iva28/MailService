@@ -39,12 +39,12 @@ namespace MailService
                 Configuration.GetSection(nameof(AuthOptions)).Bind(options);
             });
 
+            services.AddIdentity<Account, IdentityRole>().AddEntityFrameworkStores<MyDbContext>().AddDefaultTokenProviders();
+
             services.AddDbContext<MyDbContext>(opts =>
             {
                 opts.UseSqlServer(Configuration.GetConnectionString("MyConnection"));
             });
-
-            services.AddIdentity<Account, IdentityRole>().AddEntityFrameworkStores<MyDbContext>().AddDefaultTokenProviders();
 
             services.Configure<IdentityOptions>(options =>
             {
