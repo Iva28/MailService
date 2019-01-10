@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -14,14 +13,12 @@ using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.Swagger;
 using System;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Text;
 
 namespace MailService
 {
     public class Startup
     {
-       private AuthOptions _authOptions;
+        private AuthOptions _authOptions;
 
         public Startup(IConfiguration configuration)
         {
@@ -58,21 +55,22 @@ namespace MailService
 
             services.AddTransient<IAccountService, AccountService>();
 
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
-            {
-                options.RequireHttpsMetadata = false;
-                options.TokenValidationParameters = new TokenValidationParameters
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
                 {
-                    ValidateIssuer = true,
-                    ValidIssuer = _authOptions.Issuer,
-                    ValidateAudience = true,
-                    ValidAudience = _authOptions.Audience,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = _authOptions.GetSymmetricSecurityKey(),
-                    ClockSkew = TimeSpan.Zero
-                };
-            });
+                    options.RequireHttpsMetadata = false;
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = _authOptions.Issuer,
+                        ValidateAudience = true,
+                        ValidAudience = _authOptions.Audience,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = _authOptions.GetSymmetricSecurityKey(),
+                        ClockSkew = TimeSpan.Zero
+                    };
+                });
 
             services.AddSwaggerGen(c =>
             {
@@ -113,14 +111,14 @@ namespace MailService
 
             app.UseStatusCodePages();
 
-            app.UseAuthentication();
-
             app.UseSwagger();
 
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1.0/swagger.json", "Mail API v1");
             });
+
+            app.UseAuthentication();
 
             app.UseMvc();
         }

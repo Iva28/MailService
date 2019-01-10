@@ -9,6 +9,7 @@ namespace MailService.Services
         Task<SignInResponse> SignIn(string email, string password);
         Task<GetInfoResponse> GetInfo(string id);
         Task<bool> SendMessage(string address, string subject, string body, string id);
+        Task<SignInResponse> UpdateTokenAsync(string refreshToken);
         Task SignOut(string id);
     }
 }

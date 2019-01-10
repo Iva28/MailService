@@ -37,16 +37,18 @@ namespace MailService.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetInfo()
         {
             var id = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
             var resp = await accountService.GetInfo(id);
             if (resp != null)
                 return new JsonResult(resp);
-            return Unauthorized();
+            return BadRequest();
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> SendMsg([FromBody]SendMessageRequest model)
         {
             var id = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -60,11 +62,15 @@ namespace MailService.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> SignOut()
         {
             var id = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            await accountService.SignOut(id);
-            return Ok();
+            //if (id != null) {
+                await accountService.SignOut(id);
+                return Ok();
+            //}
+            //return Unauthorized();
         }
     }
 }

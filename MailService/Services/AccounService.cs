@@ -53,7 +53,7 @@ namespace MailService.Services
             var result = await signInManager.PasswordSignInAsync(email, password, false, false);
             if (result.Succeeded) {
                 var account = await userManager.FindByNameAsync(email);
-                SignInResponse resp = GenerateJwtToken(account);
+                SignInResponse resp = await GenerateJwtTokenAsync(account);
                 if (resp != null)
                     return resp;
             }
@@ -83,7 +83,7 @@ namespace MailService.Services
             var tokens = dbcontext.AccountTokens.Where(a => a.Account.Id == id).ToList();
             if (tokens.Count() != 0) {
                 dbcontext.AccountTokens.RemoveRange(tokens);
-                dbcontext.SaveChanges();
+                await dbcontext.SaveChangesAsync();
             }
         }
 
@@ -122,17 +122,16 @@ namespace MailService.Services
             return false;
         }
 
-        public SignInResponse UpdateToken(string refreshToken)
+        public async Task<SignInResponse> UpdateTokenAsync(string refreshToken)
         {
             var accToken = dbcontext.AccountTokens.FirstOrDefault(at => at.RefreshToken == refreshToken);
             if (accToken == null) return null;
             if (accToken.RefreshExpires <= DateTime.Now) return null;
-            Account account = accToken.Account;
-            if (account == null) return null;
-            return GenerateJwtToken(account);
+            if (accToken.Account == null) return null;
+            return await GenerateJwtTokenAsync(accToken.Account);
         }
 
-        public SignInResponse GenerateJwtToken(Account account)
+        public async Task<SignInResponse> GenerateJwtTokenAsync(Account account)
         {
             List<Claim> claims = new List<Claim>() {
                 new Claim(ClaimsIdentity.DefaultNameClaimType, account.Email),
@@ -148,6 +147,7 @@ namespace MailService.Services
                    signingCredentials: new SigningCredentials(_authOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256)
             );
             string tokenStr = new JwtSecurityTokenHandler().WriteToken(token);
+
             SignInResponse resp = new SignInResponse() {
                 Email = account.Email,
                 AccessToken = tokenStr,
@@ -163,7 +163,7 @@ namespace MailService.Services
                 RefreshExpires = DateTime.Now.AddMinutes(_authOptions.RefreshLifetime),
                 RefreshToken = resp.RefreshToken
             });
-            dbcontext.SaveChanges();
+            await dbcontext.SaveChangesAsync();
             return resp;
         }
     }
