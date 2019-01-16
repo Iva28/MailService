@@ -1,5 +1,6 @@
 ﻿using MailService.DTO;
 using MailService.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -33,11 +34,11 @@ namespace MailService.Controllers
             var resp = await accountService.SignIn(model.Email, model.Password);
             if (resp != null)
                 return new JsonResult(resp);
-            return ValidationProblem();          
+            return ValidationProblem();
         }
 
         [HttpGet]
-        [Authorize]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> GetInfo()
         {
             var id = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -48,7 +49,7 @@ namespace MailService.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> SendMsg([FromBody]SendMessageRequest model)
         {
             var id = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -62,15 +63,12 @@ namespace MailService.Controllers
         }
 
         [HttpGet]
-        [Authorize]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> SignOut()
         {
             var id = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            //if (id != null) {
-                await accountService.SignOut(id);
-                return Ok();
-            //}
-            //return Unauthorized();
+            await accountService.SignOut(id);
+            return Ok();          
         }
     }
 }

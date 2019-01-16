@@ -49,7 +49,6 @@ namespace MailService
                 options.Password.RequireLowercase = false;
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireUppercase = false;
-
                 options.Password.RequiredLength = 3;
             });
 
@@ -92,7 +91,6 @@ namespace MailService
             });
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
