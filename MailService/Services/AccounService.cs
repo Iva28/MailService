@@ -97,6 +97,7 @@ namespace MailService.Services
                     mailMessage.To.Add(new MailAddress(address));
                     mailMessage.Subject = subject;
                     mailMessage.Body = body;
+
                     SmtpClient MailClient = new SmtpClient("smtp.gmail.com", 587);
                     MailClient.Credentials = new NetworkCredential("user@gmail.com", "*****");
                     MailClient.EnableSsl = true;
@@ -107,6 +108,11 @@ namespace MailService.Services
                     acc.Left_today -= 1;
                     acc.Delivered_total += 1;
                     acc.Delivered_today += 1;
+
+                    var msg = new Message() { Address = address, Body = body, Subject = subject, Account = acc };
+                    dbcontext.Messages.Add(msg);
+                    await dbcontext.SaveChangesAsync();
+
                     return true;
                 }
                 catch (SmtpFailedRecipientsException) {

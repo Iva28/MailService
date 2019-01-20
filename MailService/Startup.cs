@@ -109,14 +109,14 @@ namespace MailService
 
             app.UseStatusCodePages();
 
+            app.UseAuthentication();
+
             app.UseSwagger();
 
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1.0/swagger.json", "Mail API v1");
             });
-
-            app.UseAuthentication();
 
             app.UseMvc();
         }

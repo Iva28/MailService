@@ -34,7 +34,7 @@ namespace MailService.Controllers
             var resp = await accountService.SignIn(model.Email, model.Password);
             if (resp != null)
                 return new JsonResult(resp);
-            return ValidationProblem();
+            return BadRequest();
         }
 
         [HttpGet]
